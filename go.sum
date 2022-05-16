@@ -1,4 +1,6 @@
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
+github.com/Racinettee/generics v0.0.0-20220510022840-97357259195f h1:us5zjl+K+el7VxM58I5KyhWlCg1AfdttcUgz3t97PX0=
+github.com/Racinettee/generics v0.0.0-20220510022840-97357259195f/go.mod h1:gH8eylv2kls/T7cjFg6ZlpbgWKDJAo5HSNkwd1uFg38=
 github.com/Racinettee/imgui-fileselector v0.0.0-20220508234519-dda1fe005e33 h1:yipJE+MJoa79neCrHEmK0+G/8ekr/os/eR/mRFJg6hw=
 github.com/Racinettee/imgui-fileselector v0.0.0-20220508234519-dda1fe005e33/go.mod h1:cDbgNlZ7MlVMXhiJBKjw9r84o6M6s7V4qsgg/8hoGyE=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

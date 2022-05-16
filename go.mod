@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/Racinettee/generics v0.0.0-20220510022840-97357259195f // indirect
 	github.com/Racinettee/imgui-fileselector v0.0.0-20220508234519-dda1fe005e33 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220320163800-277f93cfa958 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect

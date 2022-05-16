@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 
 	imguifileselector "github.com/Racinettee/imgui-fileselector"
+	"github.com/Racinettee/tiles/pkg/tiles"
+	"github.com/Racinettee/tiles/pkg/ui"
+	"github.com/Racinettee/tiles/pkg/util"
 	"github.com/gabstv/ebiten-imgui/renderer"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -17,11 +20,11 @@ import (
 	"github.com/inkyblackness/imgui-go/v4"
 )
 
-var callbackQueue chan func()
+var callbackQueue util.CallbackQueue
 var fileSelector imguifileselector.FileSelector
 
 func main() {
-	callbackQueue = make(chan func(), 100)
+	callbackQueue = make(util.CallbackQueue, 100)
 	mgr := renderer.New(nil)
 
 	ebiten.SetWindowSize(1024, 768)
@@ -35,30 +38,44 @@ func main() {
 		log.Printf("YOU CLOSED THE DIALOG")
 	}
 	gg := &G{
-		mgr:    mgr,
-		dscale: ebiten.DeviceScaleFactor(),
+		mgr:     mgr,
+		menuBar: ui.CreateMenuBar(),
+		dscale:  ebiten.DeviceScaleFactor(),
 	}
 
 	ebiten.RunGame(gg)
 }
 
 type G struct {
-	mgr *renderer.Manager
+	mgr     *renderer.Manager
+	menuBar ui.MainMenuBar
 	// demo members:
 	showDemoWindow bool
 	dscale         float64
 	retina         bool
 	w, h           int
+	currentLevel   *tiles.LevelData
+}
+
+type TilesetWindow struct {
+	tileSet *tiles.TileSet
+}
+
+func (tsw *TilesetWindow) Update() {
+	if imgui.Begin(tsw.tileSet.ImagePath) {
+
+		imgui.End()
+	}
+}
+
+func onNewTileSet() {
+
 }
 
 func (g *G) Draw(screen *ebiten.Image) {
+
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("TPS: %.2f\nFPS: %.2f\n[C]lipMask: %t", ebiten.CurrentTPS(), ebiten.CurrentFPS(), g.mgr.ClipMask), 10, 2)
 	g.mgr.Draw(screen)
-}
-
-var currentItem int32
-var fileSelection = []string{
-	"Lol", "Brawl", "Call", "Mall",
 }
 
 func (g *G) Update() error {
@@ -68,7 +85,7 @@ func (g *G) Update() error {
 	}
 	g.mgr.BeginFrame()
 	{
-		DrawMenuBar()
+		g.menuBar.Update()
 
 		imgui.Checkbox("Retina", &g.retina) // Edit bools storing our window open/close state
 
@@ -84,13 +101,7 @@ func (g *G) Update() error {
 			imgui.OpenPopup(fileSelector.DialogLabel())
 		}
 	}
-	select {
-	case cb := <-callbackQueue:
-		log.Println("Calling callback")
-		cb()
-	default:
-		break
-	}
+	callbackQueue.Update()
 	g.mgr.EndFrame()
 	return nil
 }
@@ -112,57 +123,18 @@ func (g *G) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.w, g.h
 }
 
-func DrawMenuBar() {
-	if imgui.BeginMainMenuBar() {
-		if imgui.BeginMenu("File") {
-			if imgui.MenuItem("New Tileset") {
-				CreateNewTileSet()
-			}
-
-			imgui.MenuItem("Save")
-			imgui.MenuItem("Open")
-			imgui.MenuItem("Exit")
-
-			imgui.EndMenu()
-		}
-
-		if imgui.BeginMenu("Edit") {
-			imgui.MenuItem("Cut")
-			imgui.MenuItem("Paste")
-			imgui.EndMenu()
-		}
-
-		if imgui.BeginMenu("Help") {
-			imgui.MenuItem("About")
-			imgui.EndMenu()
-		}
-
-		imgui.EndMainMenuBar()
-	}
-}
-
 func CreateNewTileSet() {
-	log.Println("Create a new tileset!")
-	NextFrame(func() {
+	callbackQueue.NextFrame(func() {
 		wd, _ := os.Getwd()
 		fileSelector, _ = imguifileselector.OpenFileSelector(wd)
-		fileSelector.OnChoosePressed = func(dir, file string) {
-			//exampleImage, _, err := ebitenutil.NewImageFromFile("example.png")
-			//if err != nil {
-			//	log.Fatal(err)
-			//}
-			//mgr.Cache.SetTexture(10, exampleImage) // Texture ID 10 will contain this example image
-		}
-		log.Printf("Label: %v\n", fileSelector.DialogLabel())
+		//fileSelector.OnChoosePressed = func(dir, file string) {
+		//	log.Printf("you chose %v/%v", dir, file)
+		//exampleImage, _, err := ebitenutil.NewImageFromFile("example.png")
+		//if err != nil {
+		//	log.Fatal(err)
+		//}
+		//mgr.Cache.SetTexture(10, exampleImage) // Texture ID 10 will contain this example image
+		//}
 		imgui.OpenPopup(fileSelector.DialogLabel())
 	})
-}
-
-func NextFrame(cb func()) {
-	log.Println("Next frame called")
-	callbackQueue <- func() {
-		log.Println("Pushing this cb to next frame")
-		callbackQueue <- cb
-	}
-	log.Println("Moving on from next frame")
 }
