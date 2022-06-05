@@ -6,13 +6,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	imguifileselector "github.com/Racinettee/imgui-fileselector"
 	"github.com/Racinettee/tiles/pkg/tiles"
 	"github.com/Racinettee/tiles/pkg/ui"
-	"github.com/Racinettee/tiles/pkg/util"
 	"github.com/gabstv/ebiten-imgui/renderer"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -20,21 +18,18 @@ import (
 	"github.com/inkyblackness/imgui-go/v4"
 )
 
-var callbackQueue util.CallbackQueue
-var fileSelector imguifileselector.FileSelector
-
 func main() {
-	callbackQueue = make(util.CallbackQueue, 100)
+
 	mgr := renderer.New(nil)
 
 	ebiten.SetWindowSize(1024, 768)
 	ebiten.SetWindowResizable(true)
 
-	fileSelector, _ = imguifileselector.OpenFileSelector("/home/racket/tiles")
-	fileSelector.OnChoosePressed = func(dir, file string) {
+	ui.FileSelector, _ = imguifileselector.OpenFileSelector("/home/racket/tiles")
+	ui.FileSelector.OnChoosePressed = func(dir, file string) {
 		log.Printf("YOU CHOSE %v\n", filepath.Join(dir, file))
 	}
-	fileSelector.OnClosePressed = func() {
+	ui.FileSelector.OnClosePressed = func() {
 		log.Printf("YOU CLOSED THE DIALOG")
 	}
 	gg := &G{
@@ -42,7 +37,7 @@ func main() {
 		menuBar: ui.CreateMenuBar(),
 		dscale:  ebiten.DeviceScaleFactor(),
 	}
-
+	gg.menuBar.ItemPath("File#New Tileset").OnClick = ui.OnNewTileSet
 	ebiten.RunGame(gg)
 }
 
@@ -68,10 +63,6 @@ func (tsw *TilesetWindow) Update() {
 	}
 }
 
-func onNewTileSet() {
-
-}
-
 func (g *G) Draw(screen *ebiten.Image) {
 
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("TPS: %.2f\nFPS: %.2f\n[C]lipMask: %t", ebiten.CurrentTPS(), ebiten.CurrentFPS(), g.mgr.ClipMask), 10, 2)
@@ -95,13 +86,13 @@ func (g *G) Update() error {
 			imgui.ShowDemoWindow(&g.showDemoWindow)
 		}
 
-		fileSelector.Update()
+		ui.FileSelector.Update()
 		if imgui.Button("Show Dialog") {
-			log.Printf(fileSelector.DialogLabel())
-			imgui.OpenPopup(fileSelector.DialogLabel())
+			log.Printf(ui.FileSelector.DialogLabel())
+			imgui.OpenPopup(ui.FileSelector.DialogLabel())
 		}
 	}
-	callbackQueue.Update()
+	ui.CallbackQueue.Update()
 	g.mgr.EndFrame()
 	return nil
 }
@@ -121,20 +112,4 @@ func (g *G) Layout(outsideWidth, outsideHeight int) (int, int) {
 	}
 	g.mgr.SetDisplaySize(float32(g.w), float32(g.h))
 	return g.w, g.h
-}
-
-func CreateNewTileSet() {
-	callbackQueue.NextFrame(func() {
-		wd, _ := os.Getwd()
-		fileSelector, _ = imguifileselector.OpenFileSelector(wd)
-		//fileSelector.OnChoosePressed = func(dir, file string) {
-		//	log.Printf("you chose %v/%v", dir, file)
-		//exampleImage, _, err := ebitenutil.NewImageFromFile("example.png")
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-		//mgr.Cache.SetTexture(10, exampleImage) // Texture ID 10 will contain this example image
-		//}
-		imgui.OpenPopup(fileSelector.DialogLabel())
-	})
 }
